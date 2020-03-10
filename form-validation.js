@@ -3,9 +3,22 @@ export default class FormValidation {
         this.options = this.mergeOptions(options);
 		this.form = this.options.element;
 		this.rules = this.options.rules;
+		this.errorElClass = this.options.errorElementClass;
 		this.onError = this.options.onError.bind(this);
-		this.requiredFields = [...this.form.querySelectorAll('[required]')];
-        
+		this.requiredFields = [...this.form.querySelectorAll('[required], .required')];
+		// this.requiredFields = {};
+
+		// [...this.form.querySelectorAll('[required], .required')].forEach((input) => {
+		// 	const inputName = input.name;
+
+		// 	if(this.requiredFields[inputName] === undefined) {
+		// 		this.requiredFields[inputName] = [input];
+		// 	} else {
+		// 		this.requiredFields[inputName].push(input);
+		// 	}
+		// });
+		
+        this.createErrorElements();
         this.initAttrs();
 	}
 	
@@ -17,6 +30,7 @@ export default class FormValidation {
 				date: /[0-9]{2}-[0-9]{2}-[0-9]{4}/gi,
 				number: /[0-9]/gi
 			},
+			errorElementClass: 'form-error',
 			onError: () => {},
 		};
 
@@ -35,7 +49,16 @@ export default class FormValidation {
 		if(this.requiredFields.length > 0) {
 			for(const input of this.requiredFields) {
 				const error = input.dataset.inputError;
-
+				
+				if(error) {
+					const inputParent = input.parentNode;
+					const errorEl = document.createElement('span');
+					
+					errorEl.classList.add(this.errorElClass);
+					errorEl.textContent = error;
+					
+					inputParent.appendChild(errorEl);
+				}
 			}
 		}
 	}
@@ -47,25 +70,37 @@ export default class FormValidation {
 
 		return '';
 	}
+
+	getVisibleFields() {
+		return this.requiredFields.filter((input) => {
+			return this.inputIsVisible(input);
+		});
+	}
+
+	inputIsVisible(el) {
+		return !!( el.offsetWidth || el.offsetHeight || el.getClientRects().length );
+	} 
 	
 	inputIsValid(input) {
-		const inputType = input.type;
+		const inputType = input.dataset.type || input.type;
 		const inputValue = input.value;
 		const rule = this.getRule(inputType);
-
+		
 		if(rule !== '') {
 			return rule.test(inputType);
 		} else {
 			if(inputType === 'text') {
 				return inputValue.length > 0;
 			} else {
-				return inputValue.checked;
+				return input.checked;
 			}
 		}
 	}
 
 	isValid() {
-        for(const input of this.requiredFields) {
+		const visibleFields = this.getVisibleFields();
+
+        for(const input of visibleFields) {
             if(!this.inputIsValid(input)) {
 				input.classList.add('has-error');
 				
