@@ -1,44 +1,94 @@
+/* https://stackoverflow.com/a/48579540 */
+
+const toType = (a) => {
+    // Get fine type (object, array, function, null, error, date ...)
+    return ({}).toString.call(a).match(/([a-z]+)(:?\])/i)[1];
+}
+
+const isDeepObject = (obj) => {
+    return "Object" === toType(obj);
+}
+
+const deepAssign = (options) => {
+    return function deepAssignWithOptions(target, ...sources) {
+        sources.forEach((source) => {
+
+            if (!isDeepObject(source) || !isDeepObject(target)) {
+				return;
+			}
+
+            // Copy source's own properties into target's own properties
+            function copyProperty(property) {
+                const descriptor = Object.getOwnPropertyDescriptor(source, property);
+                //default: omit non-enumerable properties
+                if (descriptor.enumerable || options.nonEnum) {
+                    // Copy in-depth first
+                    if (isDeepObject(source[property]) && isDeepObject(target[property])) {
+						descriptor.value = deepAssign(options)(target[property], source[property]);
+					}
+                    //default: omit descriptors
+                    if (options.descriptors) {
+                        Object.defineProperty(target, property, descriptor); // shallow copy descriptor
+					} else {
+						target[property] = descriptor.value; // shallow copy value only
+					}
+                }
+            }
+
+            // Copy string-keyed properties
+            Object.getOwnPropertyNames(source).forEach(copyProperty);
+
+            //default: omit symbol-keyed properties
+            if (options.symbols) {
+				Object.getOwnPropertySymbols(source).forEach(copyProperty);
+			}
+
+            //default: omit prototype's own properties
+            if (options.proto) {
+                // Copy souce prototype's own properties into target prototype's own properties
+                deepAssign(Object.assign({},options,{proto:false})) (// Prevent deeper copy of the prototype chain
+                    Object.getPrototypeOf(target),
+                    Object.getPrototypeOf(source)
+                );
+			}
+		});
+		
+        return target;
+    }
+}
+
 export default class FormValidation {
 	constructor(options = {}) {
-        this.options = this.mergeOptions(options);
+        this.options = FormValidation.mergeOptions(options);
 		this.form = this.options.element;
 		this.rules = this.options.rules;
 		this.errorElClass = this.options.errorElementClass;
 		this.onError = this.options.onError.bind(this);
 		this.requiredFields = [...this.form.querySelectorAll('[required], .required')];
-		// this.requiredFields = {};
-
-		// [...this.form.querySelectorAll('[required], .required')].forEach((input) => {
-		// 	const inputName = input.name;
-
-		// 	if(this.requiredFields[inputName] === undefined) {
-		// 		this.requiredFields[inputName] = [input];
-		// 	} else {
-		// 		this.requiredFields[inputName].push(input);
-		// 	}
-		// });
 		
         this.createErrorElements();
         this.initAttrs();
 	}
+
+	get visibleFields() {
+		return this.requiredFields.filter((input) => {
+			return this.inputIsVisible(input);
+		});
+	}
 	
-	mergeOptions(options = {}) {
+	static mergeOptions(options = {}) {
 		const defaultOptions = {
 			element: document.querySelector('[data-form-validation]'),
 			rules: {
-				email: /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/gi,
-				date: /[0-9]{2}-[0-9]{2}-[0-9]{4}/gi,
-				number: /[0-9]/gi
+				email: /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/i,
+				date: /[0-9]{2}-[0-9]{2}-[0-9]{4}/i,
+				number: /[0-9]/i
 			},
 			errorElementClass: 'form-error',
 			onError: () => {},
 		};
 
-        for(const attr in options) {
-            defaultOptions[attr] = options[attr];
-        }
-
-        return defaultOptions;
+        return deepAssign({})(defaultOptions, options);
     }
 
     initAttrs() {
@@ -71,12 +121,6 @@ export default class FormValidation {
 		return '';
 	}
 
-	getVisibleFields() {
-		return this.requiredFields.filter((input) => {
-			return this.inputIsVisible(input);
-		});
-	}
-
 	inputIsVisible(el) {
 		return !!( el.offsetWidth || el.offsetHeight || el.getClientRects().length );
 	} 
@@ -85,33 +129,41 @@ export default class FormValidation {
 		const inputType = input.dataset.type || input.type;
 		const inputValue = input.value;
 		const rule = this.getRule(inputType);
+		let isValid = true;
 		
 		if(rule !== '') {
-			return rule.test(inputType);
+			isValid = rule.test(inputValue);
 		} else {
 			if(inputType === 'text') {
-				return inputValue.length > 0;
+				isValid = inputValue.length > 2;
 			} else {
-				return input.checked;
+				isValid = input.checked;
 			}
 		}
+
+		if(!isValid) {
+			input.classList.add('has-error');
+			this.onError(input);
+
+			return false;
+		}
+
+		input.classList.remove('has-error');
+		
+		return true;
 	}
 
-	isValid() {
-		const visibleFields = this.getVisibleFields();
+	formIsValid() {
+		let isValid = true;
 
-        for(const input of visibleFields) {
-            if(!this.inputIsValid(input)) {
-				input.classList.add('has-error');
-				
-				this.onError(input);
-
-                return false;
-            } else {
-                input.classList.remove('has-error');
-            }
+		for(const input of this.visibleFields) {
+			const inputIsValid = this.inputIsValid(input);
+			
+			if(!inputIsValid) {
+				isValid = false;
+			}
         }
 
-        return true;
-    }
+		return isValid;
+	}
 }
