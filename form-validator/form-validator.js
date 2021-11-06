@@ -29,7 +29,6 @@ export class FormValidator {
 				email,
 				phone,
 				required,
-				int,
 				instagram
 			},
 			errorElementClass: 'form-error',
