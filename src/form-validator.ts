@@ -1,27 +1,53 @@
+// @ts-ignore
 import { deepAssign } from './helpers';
 import {
 	date, email, phone, required, instagram
 } from './rules';
 
+export type FieldType = 'text' | 'email' | 'password' | 'number' | 'date' | 'file' | 'select' | 'radio' | 'checkbox' | 'textarea';
+
+export interface ValidationRule {
+	(value: any): boolean | string;
+}
+
+export interface ValidatorConstructorOptions {
+    element?: HTMLElement;
+    onFieldError?: Function;
+    onFormError?: Function;
+	errorElementClass?: string;
+	rules?: { 
+		[key: string]: ValidationRule;
+	};
+}
+
 // eslint-disable-next-line import/prefer-default-export
 export class FormValidator {
-	constructor(options = {}) {
+	options: any;
+	form: HTMLElement;
+	onFieldError: Function;
+	onFormError: Function;
+	formFields: HTMLFormElement[];
+	errorElements: {
+		[key: string]: HTMLElement;
+	}
+
+	constructor(options: ValidatorConstructorOptions = {}) {
 		this.options = this.mergeOptions(options);
 		this.form = this.options.element;
 		this.onFieldError = this.options.onFieldError;
 		this.onFormError = this.options.onFormError;
-		this.formFields = [...this.form.querySelectorAll('[data-rules]:not([data-rules=""])')];
+		this.formFields = [...this.form.querySelectorAll('[data-rules]:not([data-rules=""])')] as HTMLFormElement[];
 		this.errorElements = {};
 
 		this.createErrorElements();
 		this.initAttrs();
 	}
 
-	get visibleFormFields() {
+	get visibleFormFields(): HTMLFormElement[] {
 		return this.formFields.filter((field) => this.isFieldVisible(field));
 	}
 
-	mergeOptions(options = {}) {
+	mergeOptions(options = {}): void {
 		const defaultOptions = {
 			element: document.querySelector('[data-form-validator]'),
 			rules: {
@@ -39,11 +65,11 @@ export class FormValidator {
 		return deepAssign({})(defaultOptions, options);
 	}
 
-	initAttrs() {
+	initAttrs(): void {
 		this.form.setAttribute('novalidate', '');
 	}
 
-	createErrorElements() {
+	createErrorElements(): void {
 		const { errorElementClass } = this.options;
 
 		// eslint-disable-next-line no-restricted-syntax
@@ -52,13 +78,13 @@ export class FormValidator {
 			const errorElement = document.createElement('span');
 
 			errorElement.classList.add(errorElementClass);
-			parentNode.appendChild(errorElement);
+			parentNode?.appendChild(errorElement);
 
 			this.errorElements[name] = errorElement;
 		}
 	}
 
-	getValidator(rule) {
+	getValidator(rule: string): Function | null {
 		const { rules } = this.options;
 
 		if (rules[rule]) {
@@ -68,21 +94,26 @@ export class FormValidator {
 		return null;
 	}
 
-	isFieldVisible(field) {
+	isFieldVisible(field: HTMLFormElement): boolean {
 		field = field.closest('.form__group') || field;
 
 		return !!(field.offsetWidth || field.offsetHeight || field.getClientRects().length);
 	}
 
-	isSelectableField(type) {
+	isSelectableField(type: FieldType): boolean {
 		return ['checkbox', 'radio'].includes(type);
 	}
 
-	isFieldValid(field) {
+	isFieldValid(field: HTMLFormElement): boolean {
 		const {
 			name, value, checked, dataset, type
 		} = field;
-		const fieldElement = field.closest(dataset.errorOnParent) || field;
+
+		if (!dataset.rules) {
+			return true;
+		}
+	
+		const fieldElement = dataset.errorOnParent ? field.closest(dataset.errorOnParent) : field;
 		const errorElement = this.errorElements[name];
 		const rules = dataset.rules.split('|');
 
@@ -102,7 +133,7 @@ export class FormValidator {
 
 			if (typeof validationResult === 'string') {
 				errorElement.textContent = validationResult;
-				fieldElement.classList.add('has-error');
+				fieldElement?.classList.add('has-error');
 
 				this.onFieldError(fieldElement);
 
@@ -113,14 +144,14 @@ export class FormValidator {
 		}
 
 		if (isValid) {
-			fieldElement.classList.remove('has-error');
+			fieldElement?.classList.remove('has-error');
 			errorElement.textContent = '';
 		}
 
 		return isValid;
 	}
 
-	isFormValid() {
+	isFormValid(): boolean {
 		const invalidFields = [];
 
 		// eslint-disable-next-line no-restricted-syntax

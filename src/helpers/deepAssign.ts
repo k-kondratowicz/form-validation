@@ -1,17 +1,22 @@
 import { isDeepObject } from './isDeepObject';
 
 // eslint-disable-next-line import/prefer-default-export
-export const deepAssign = (options) => function deepAssignWithOptions(target, ...sources) {
-	sources.forEach((source) => {
+export const deepAssign = (options: any) => function deepAssignWithOptions(target: any, ...sources: any) {
+	sources.forEach((source: any) => {
 		if (!isDeepObject(source) || !isDeepObject(target)) {
 			return;
 		}
 
 		// Copy source's own properties into target's own properties
-		function copyProperty(property) {
+		function copyProperty(property: any) {
 			const descriptor = Object.getOwnPropertyDescriptor(source, property);
+
+			if (!descriptor) {
+				throw new Error(`Property "${property}" does not exist on source object`);
+			}
+
 			// default: omit non-enumerable properties
-			if (descriptor.enumerable || options.nonEnum) {
+			if (descriptor?.enumerable || options.nonEnum) {
 				// Copy in-depth first
 				if (isDeepObject(source[property]) && isDeepObject(target[property])) {
 					descriptor.value = deepAssign(options)(target[property], source[property]);

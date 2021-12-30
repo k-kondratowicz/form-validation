@@ -1,6 +1,5 @@
 export * from './date';
 export * from './email';
-export * from './int';
+export * from './instagram';
 export * from './phone';
 export * from './required';
-export * from './instagram';
