@@ -1,6 +1,6 @@
 {
-    "name": "form-validation",
-    "version": "2.0.1",
+    "name": "@kamil.kondratowicz/form-validation",
+    "version": "2.0.2",
     "description": "",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
