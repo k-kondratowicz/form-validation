@@ -1,39 +1,51 @@
 {
-  "compilerOptions": {
-    "target": "es6",
-    "module": "esnext",
-    "strict": true,
-    "allowJs": true,
-    "jsx": "preserve",
-    "importHelpers": true,
-    "moduleResolution": "node",
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
-    "baseUrl": ".",
-    "outDir": "dist",
-    "declaration": true,
-    "declarationDir": "./dist/types",
-    "types": [],
-    "paths": {
-      "@/*": [
-        "src/*"
-      ]
-    },
-    "lib": [
-      "es6",
-      "esnext",
-      "dom",
-      "dom.iterable",
-      "scripthost"
-    ]
-  },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+	"compilerOptions": {
+		/* Language and Environment */
+		"target": "ESNext",
+		"lib": [
+			"ES2017",
+			"ES7",
+			"ES6",
+			"DOM",
+			"DOM.Iterable",
+		],
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		
+		/* Modules */
+		"module": "ESNext",
+		"moduleResolution": "node",
+		"baseUrl": "./",
+		"paths": {
+			"@/*": [
+				"src/*"
+			]
+		},
+
+		/* Emit */
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"sourceMap": true,
+		"outDir": "dist",
+		"declarationDir": "types",
+
+		/* Interop Constraints */
+		"isolatedModules": true,
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+
+		/* Type Checking */
+		"strict": true,
+		"noImplicitAny": true,
+		"skipLibCheck": true,
+	},
+	"include": [
+		"src/**/*.ts",
+		"rollup.config.mjs"
+	],
+	"exclude": [
+		"node_modules",
+		"dist"
+	]
 }

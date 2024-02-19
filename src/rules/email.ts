@@ -1,2 +1,13 @@
-// eslint-disable-next-line import/prefer-default-export, no-useless-escape, max-len
-export const email = (value: any): boolean | string => /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/i.test(value) || 'Provide a valid e-mail';
+import { isString } from 'lodash';
+
+import { EMAIL_REGEX } from '@/constants/regex';
+
+export const email = (value: any): boolean | string => {
+	if (!value) {
+		return true;
+	}
+
+	const valid = isString(value) && EMAIL_REGEX.test(value);
+
+	return valid || 'Provide a valid e-mail';
+};

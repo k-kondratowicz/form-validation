@@ -1,6 +1,6 @@
 {
     "name": "@kamil.kondratowicz/form-validation",
-    "version": "2.0.2",
+    "version": "1.0.0-alpha",
     "description": "",
     "main": "dist/index.cjs",
     "module": "dist/index.mjs",
@@ -10,24 +10,21 @@
     ],
     "scripts": {
         "build": "rollup -c",
-        "dev": "rollup -c -w",
-        "pretest": "npm run build"
+        "dev": "rollup -c -w"
     },
     "repository": {
         "type": "git",
         "url": "git@gitlab.owd.io:kamil.kondratowicz/form-validation.git"
     },
     "author": "Kamil Kondratowicz",
-    "license": "ISC",
+    "license": "MIT",
     "dependencies": {
         "lodash": "^4.17.21"
     },
     "devDependencies": {
-        "@babel/core": "^7.23.9",
         "@rollup/plugin-node-resolve": "^15.2.3",
         "@rollup/plugin-typescript": "^11.1.6",
         "@types/lodash": "^4.14.202",
-        "@types/node": "^20.11.17",
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",
         "esbuild": "^0.20.0",
@@ -39,12 +36,6 @@
         "rollup": "^4.10.0",
         "rollup-plugin-dts": "^6.1.0",
         "rollup-plugin-esbuild": "^6.1.1",
-        "rollup-plugin-typescript": "^1.0.1",
-        "rollup-plugin-typescript-paths": "^1.5.0",
-        "tslib": "^2.6.2",
         "typescript": "^5.3.3"
-    },
-    "publishConfig": {
-        "registry": "https://gitlab.owd.io/api/v4/projects/235/packages/npm/"
     }
 }
