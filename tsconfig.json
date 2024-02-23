@@ -16,18 +16,24 @@
 		"module": "ESNext",
 		"moduleResolution": "node",
 		"baseUrl": "./",
+		"rootDir": "./src",
 		"paths": {
 			"@/*": [
 				"src/*"
 			]
 		},
+		"plugins": [
+            { 
+				"transform": "@zerollup/ts-transform-paths" 
+			}
+        ],
 
 		/* Emit */
 		"declaration": true,
 		"emitDeclarationOnly": true,
 		"sourceMap": true,
-		"outDir": "dist",
-		"declarationDir": "types",
+		"outDir": "./dist",
+		"declarationDir": "./types",
 
 		/* Interop Constraints */
 		"isolatedModules": true,
@@ -40,10 +46,12 @@
 		"noImplicitAny": true,
 		"skipLibCheck": true,
 	},
+
 	"include": [
 		"src/**/*.ts",
 		"rollup.config.mjs"
 	],
+
 	"exclude": [
 		"node_modules",
 		"dist"
