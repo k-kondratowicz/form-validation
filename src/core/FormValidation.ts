@@ -1,21 +1,23 @@
 import { defaultsDeep, flatten, uniq } from 'lodash';
 
-import { FormField, FormValidationOptions as Options, ValidatorFunction } from '@/types';
-import { isElementVisible, isFormField, useFormObserver } from '@/utils';
+import { FormField, FormValidationOptions as Options, Rule, ValidatorFunction } from '@/types';
+import { isElementVisible, isFormField, Task, useFormObserver, useTask } from '@/utils';
 
 export class FormValidation {
 	fields = new Map<string, FormField[]>();
-	formObserver: MutationObserver;
 	errors = new Map<string, HTMLElement>();
+	rules = new Map<string, Rule>();
+	formObserver: MutationObserver;
 	validationOptions: Options;
 	static validators = new Map<string, ValidatorFunction>();
+	task?: Task;
 
 	constructor(
 		readonly form: HTMLFormElement,
 		options?: Options,
 	) {
 		this.validationOptions = this.mergeOptions(options ?? {});
-		this.formObserver = useFormObserver(this.form, this.formObserverCallback);
+		this.formObserver = useFormObserver(this.form, this.formObserverCallback.bind(this));
 
 		this.addFields(
 			Array.from(
@@ -40,12 +42,14 @@ export class FormValidation {
 	}
 
 	formObserverCallback(mutations: MutationRecord[]) {
+		this.task = useTask();
+
 		const addedNodes: Node[] = [];
 		const removedNodes: Node[] = [];
 
 		mutations.forEach(record => {
 			addedNodes.push(...record.addedNodes);
-			removedNodes.push(...record.addedNodes);
+			removedNodes.push(...record.removedNodes);
 		});
 
 		const addedFields = addedNodes.filter(isFormField);
@@ -58,6 +62,8 @@ export class FormValidation {
 		if (removedFields.length) {
 			this.removeFields(addedFields);
 		}
+
+		this.task.resolve();
 	}
 
 	mergeOptions(options: Options) {
@@ -72,24 +78,33 @@ export class FormValidation {
 		this.form.setAttribute('novalidate', '');
 	}
 
-	createErrorElements() {
+	createErrorElement(name: string, list?: FormField[]) {
+		if (this.errors.has(name)) {
+			return;
+		}
+
 		const errorClass = this.validationOptions?.errorClass;
+		list ??= this.fields.get(name);
 
+		if (!list) {
+			return;
+		}
+
+		const lastField = list[list.length - 1];
+		const errorElement = document.createElement('span');
+
+		if (errorClass) {
+			errorElement.classList.add(errorClass);
+		}
+
+		lastField.insertAdjacentElement('afterend', errorElement);
+
+		this.errors.set(name, errorElement);
+	}
+
+	createErrorElements() {
 		for (const [name, list] of this.fields) {
-			if (this.errors.get(name)) {
-				continue;
-			}
-
-			const lastField = list[list.length - 1];
-			const errorElement = document.createElement('span');
-
-			if (errorClass) {
-				errorElement.classList.add(errorClass);
-			}
-
-			lastField.insertAdjacentElement('afterend', errorElement);
-
-			this.errors.set(name, errorElement);
+			this.createErrorElement(name, list);
 		}
 	}
 
@@ -100,20 +115,20 @@ export class FormValidation {
 			return;
 		}
 
-		const group = this.fields.get(name);
+		const list = this.fields.get(name);
 
-		if (group) {
-			group.push(field);
-			this.fields.set(name, uniq(group));
+		if (list) {
+			list.push(field);
+			this.fields.set(name, uniq(list));
 		} else {
 			this.fields.set(name, [field]);
 		}
+
+		this.createErrorElement(name);
 	}
 
 	addFields(fields: FormField[]) {
-		fields.forEach(this.addField);
-
-		this.createErrorElements();
+		fields.forEach(field => this.addField(field));
 	}
 
 	removeField(field: FormField) {
@@ -148,10 +163,10 @@ export class FormValidation {
 	}
 
 	removeFields(fields: FormField[]) {
-		fields.forEach(this.removeField);
+		fields.forEach(field => this.removeField(field));
 	}
 
-	getValidationFunction(rule: string) {
+	getValidatorFunction(rule: string) {
 		const validator = FormValidation.validators.get(rule);
 
 		if (!validator) {
@@ -181,48 +196,109 @@ export class FormValidation {
 		}
 
 		if (this.isSelectableField(field)) {
-			const group = this.fields.get(field.name);
+			const list = this.fields.get(field.name);
 
-			if (!group) {
-				console.error(
-					'[FormValidation] Field ',
-					field,
-					' must be added first, use "addField" method.',
-				);
-
+			if (!list) {
 				return;
 			}
 
-			return group.filter(f => f instanceof HTMLInputElement && f.checked).map(f => f.value);
+			return list.filter(f => f instanceof HTMLInputElement && f.checked).map(f => f.value);
 		}
 
 		return field.value;
 	}
 
+	getFieldValueByName(name: string) {
+		const list = this.fields.get(name);
+
+		if (!list) {
+			return;
+		}
+
+		const field = list.length === 1 ? list[0] : list;
+
+		if (Array.isArray(field)) {
+			return list.filter(f => f instanceof HTMLInputElement && f.checked).map(f => f.value);
+		}
+
+		return this.getFieldValue(field);
+	}
+
+	isFieldExist(field: FormField) {
+		const list = this.fields.get(field.name);
+
+		if (!list) {
+			return false;
+		}
+
+		return list.some(f => field.isSameNode(f));
+	}
+
+	getFieldRules(rulesStr: string) {
+		return rulesStr.split('|').map(ruleStr => {
+			const rule = this.rules.get(ruleStr);
+
+			if (rule) {
+				return rule;
+			}
+
+			const [ruleName, _params] = ruleStr.split(':');
+
+			const params = _params
+				? _params.split(',').map(param => {
+						if (param.startsWith('@')) {
+							return this.getFieldValueByName(param.substring(1));
+						}
+
+						return param;
+					})
+				: [];
+
+			const newRule = {
+				name: ruleName,
+				params,
+				validator: this.getValidatorFunction(ruleName),
+			};
+
+			this.rules.set(ruleName, newRule);
+
+			return newRule;
+		});
+	}
+
 	isFieldValid(field: FormField) {
 		let isValid = true;
+
+		if (!this.isFieldExist(field)) {
+			console.error(
+				'[FormValidation] Field ',
+				field,
+				' must be added first, use "addField" method.',
+			);
+
+			return isValid;
+		}
 
 		const { name, dataset } = field;
 		const value = this.getFieldValue(field);
 
-		if (!dataset.rules || dataset.rules === '') {
+		if (!dataset.rules) {
 			return isValid;
 		}
 
 		const errorElement = this.errors.get(name);
-		const rules = dataset.rules.split('|');
+		const rules = this.getFieldRules(dataset.rules);
 
 		for (let index = 0; index < rules.length; index++) {
-			const rule = rules[index];
-			const validationFunction = this.getValidationFunction(rule);
+			const { params: ruleParams, validator: validatorFunction } = rules[index];
 
-			if (!validationFunction) {
+			if (!validatorFunction) {
 				isValid = true;
 
 				continue;
 			}
 
-			const validationResult = validationFunction(value, []);
+			const validationResult = validatorFunction(value, ruleParams);
 
 			if (typeof validationResult === 'string') {
 				if (errorElement) {
@@ -252,7 +328,11 @@ export class FormValidation {
 		return isValid;
 	}
 
-	isFormValid(): boolean {
+	async isFormValid(): Promise<boolean> {
+		if (this.task) {
+			await this.task;
+		}
+
 		const invalidFields: FormField[] = [];
 
 		for (const field of this.visibleFields) {
@@ -273,4 +353,8 @@ export class FormValidation {
 	destroy() {
 		this.formObserver.disconnect();
 	}
+}
+
+export function useFormValidation(form: HTMLFormElement, options?: Options) {
+	return new FormValidation(form, options);
 }

@@ -19,3 +19,9 @@ export interface FormValidationOptions {
 	errorInnerTemplate?: (message: string) => string;
 	on?: FormValidationEvents;
 }
+
+export interface Rule {
+	name: string;
+	params: (string | string[] | undefined)[];
+	validator?: ValidatorFunction;
+}
