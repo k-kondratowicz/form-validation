@@ -266,7 +266,11 @@ export class FormValidation {
 		});
 	}
 
-	isFieldValid(field: FormField) {
+	async isFieldValid(field: FormField) {
+		if (this.task) {
+			await this.task;
+		}
+
 		let isValid = true;
 
 		if (!this.isFieldExist(field)) {
