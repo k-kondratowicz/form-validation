@@ -15,12 +15,13 @@
 		/* Modules */
 		"module": "ESNext",
 		"moduleResolution": "node",
-		"baseUrl": "./",
+		"baseUrl": ".",
 		"rootDir": "./src",
 		"paths": {
 			"@/*": [
 				"src/*"
-			]
+			],
+			"tests/*": ["./tests/*"]
 		},
 		"plugins": [
             { 
