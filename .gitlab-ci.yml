@@ -35,8 +35,8 @@ publish-yarn:
     - build-yarn
   script:
     - yarn
-    - echo "@${CI_PROJECT_ROOT_NAMESPACE}:registry=https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/npm/" > .yarnrc
-    - echo "//${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}" >> .yarnrc
+    - yarn config set --json "npmScopes['${CI_PROJECT_ROOT_NAMESPACE}'].npmRegistryServer" https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
+    - yarn config set --json "npmScopes['${CI_PROJECT_ROOT_NAMESPACE}'].npmAuthToken" ${CI_JOB_TOKEN}
     - yarn npm publish
   tags:
     - docker
