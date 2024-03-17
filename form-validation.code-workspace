@@ -8,7 +8,6 @@
         "editor.tabSize": 4,
         "editor.insertSpaces": false,
         "eslint.format.enable": true,
-        "eslint.packageManager": "yarn",
         "eslint.workingDirectories": [
             "./"
         ],
