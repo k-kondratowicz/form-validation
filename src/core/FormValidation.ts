@@ -8,15 +8,14 @@ export class FormValidation {
 	errors = new Map<string, HTMLElement>();
 	rules = new Map<string, Rule>();
 	formObserver: MutationObserver;
-	validationOptions: Options;
 	static validators = new Map<string, ValidatorFunction>();
 	task?: Task;
 
 	constructor(
 		readonly form: HTMLFormElement,
-		options?: Options,
+		public options: Options = {},
 	) {
-		this.validationOptions = this.mergeOptions(options ?? {});
+		this.options = this.mergeDefaultOptions(options ?? {});
 		this.formObserver = useFormObserver(this.form, this.formObserverCallback.bind(this));
 
 		this.addFields(
@@ -66,12 +65,12 @@ export class FormValidation {
 		this.task.resolve();
 	}
 
-	mergeOptions(options: Options) {
+	mergeDefaultOptions(options: Options) {
 		const defaultOptions: Options = {
-			errorClass: 'form-validator-error',
+			errorClass: 'form-validation-error',
 		};
 
-		return defaultsDeep(defaultOptions, options) as Options;
+		return defaultsDeep(options, defaultOptions) as Options;
 	}
 
 	initAttrs() {
@@ -83,7 +82,7 @@ export class FormValidation {
 			return;
 		}
 
-		const errorClass = this.validationOptions?.errorClass;
+		const errorClass = this.options?.errorClass;
 		list ??= this.fields.get(name);
 
 		if (!list) {
@@ -178,10 +177,6 @@ export class FormValidation {
 		return validator;
 	}
 
-	isSelectableField(field: FormField) {
-		return ['checkbox', 'radio'].includes(field.type);
-	}
-
 	getFieldValue(field: FormField) {
 		if (field instanceof HTMLSelectElement) {
 			return field.multiple ? Array.from(field.selectedOptions).map(opt => opt.value) : field.value;
@@ -190,12 +185,13 @@ export class FormValidation {
 		if (
 			field instanceof HTMLTextAreaElement ||
 			field instanceof HTMLButtonElement ||
-			field instanceof HTMLOutputElement
+			field instanceof HTMLOutputElement ||
+			(field instanceof HTMLInputElement && field.type === 'radio')
 		) {
 			return field.value;
 		}
 
-		if (this.isSelectableField(field)) {
+		if (field instanceof HTMLInputElement && field.type === 'checkbox') {
 			const list = this.fields.get(field.name);
 
 			if (!list) {
@@ -307,12 +303,12 @@ export class FormValidation {
 			if (typeof validationResult === 'string') {
 				if (errorElement) {
 					errorElement.innerHTML =
-						this.validationOptions.errorInnerTemplate?.(validationResult) ?? validationResult;
+						this.options.errorInnerTemplate?.(validationResult) ?? validationResult;
 				}
 
 				field.classList.add('has-error');
 
-				this.validationOptions.on?.fieldError?.(field);
+				this.options.on?.fieldError?.(field);
 
 				isValid = false;
 
@@ -322,7 +318,8 @@ export class FormValidation {
 
 		if (isValid) {
 			field.classList.remove('has-error');
-			this.validationOptions.on?.fieldSuccess?.(field);
+
+			this.options.on?.fieldSuccess?.(field);
 
 			if (errorElement) {
 				errorElement.innerHTML = '';
@@ -340,15 +337,17 @@ export class FormValidation {
 		const invalidFields: FormField[] = [];
 
 		for (const field of this.visibleFields) {
-			if (!this.isFieldValid(field)) {
+			const isFieldValid = await this.isFieldValid(field);
+
+			if (!isFieldValid) {
 				invalidFields.push(field);
 			}
 		}
 
 		if (invalidFields.length) {
-			this.validationOptions.on?.formError?.(invalidFields);
+			this.options.on?.formError?.(invalidFields);
 		} else {
-			this.validationOptions.on?.formSuccess?.(this.visibleFields);
+			this.options.on?.formSuccess?.(this.visibleFields);
 		}
 
 		return !invalidFields.length;
@@ -357,8 +356,4 @@ export class FormValidation {
 	destroy() {
 		this.formObserver.disconnect();
 	}
-}
-
-export function useFormValidation(form: HTMLFormElement, options?: Options) {
-	return new FormValidation(form, options);
 }

@@ -3,11 +3,11 @@ export function isElementVisible(node: unknown) {
 		return false;
 	}
 
-	const elements: HTMLElement[] = [node];
+	const isVisible = !!(node.offsetWidth || node.offsetHeight || node.getClientRects().length);
 
-	if (node.parentElement) {
-		elements.push(node.parentElement);
+	if ('checkVisibility' in node) {
+		return isVisible && node.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
 	}
 
-	return elements.some(v => v.offsetWidth || v.offsetHeight || v.getClientRects().length);
+	return isVisible;
 }
