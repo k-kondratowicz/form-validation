@@ -991,6 +991,7 @@ __metadata:
     "@types/jest": "npm:^29.5.12"
     "@types/jsdom": "npm:^21.1.6"
     "@types/lodash": "npm:^4.14.202"
+    "@types/node": "npm:^20.11.28"
     "@typescript-eslint/eslint-plugin": "npm:^6.21.0"
     "@typescript-eslint/parser": "npm:^6.21.0"
     esbuild: "npm:^0.20.0"
@@ -1482,7 +1483,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*":
+"@types/node@npm:*, @types/node@npm:^20.11.28":
   version: 20.11.28
   resolution: "@types/node@npm:20.11.28"
   dependencies:
