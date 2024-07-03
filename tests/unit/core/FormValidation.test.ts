@@ -2,6 +2,9 @@ import { FormValidation } from 'src/core/FormValidation';
 import { email, required } from 'src/rules';
 import { createElement } from 'tests/helpers/createElement';
 
+const requiredMessage = required('') as string;
+const emailMessage = email('test@') as string;
+
 describe('FormValidation', () => {
 	let formValidation: FormValidation;
 	let form: HTMLFormElement;
@@ -67,7 +70,7 @@ describe('FormValidation', () => {
 
 		const isValid = await formValidation.isFieldValid(field);
 
-		expect(isValid).toBe(false);
+		expect(isValid).not.toBe(true);
 	});
 
 	it('should validate the form', async () => {
@@ -339,7 +342,7 @@ describe('FormValidation', () => {
 
 		await formValidation.isFormValid();
 
-		expect(formErrorCallback).toHaveBeenCalledWith([invalidField]);
+		expect(formErrorCallback).toHaveBeenCalledWith([[invalidField, requiredMessage]]);
 	});
 
 	it('should trigger the formSuccess event when all fields are valid', async () => {
@@ -383,7 +386,7 @@ describe('FormValidation', () => {
 
 		await formValidation.isFormValid();
 
-		expect(fieldErrorCallback).toHaveBeenCalledWith(invalidField);
+		expect(fieldErrorCallback).toHaveBeenCalledWith(invalidField, requiredMessage);
 	});
 
 	it('should trigger the fieldSuccess event when a field is valid', async () => {

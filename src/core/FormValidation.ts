@@ -269,7 +269,7 @@ export class FormValidation {
 			await this.task;
 		}
 
-		let isValid = true;
+		let isValid: true | string = true;
 
 		if (!this.isFieldExist(field)) {
 			console.error(
@@ -310,9 +310,9 @@ export class FormValidation {
 
 				field.classList.add('has-error');
 
-				this.options.on?.fieldError?.(field);
+				this.options.on?.fieldError?.(field, validationResult);
 
-				isValid = false;
+				isValid = validationResult;
 
 				break;
 			}
@@ -336,20 +336,21 @@ export class FormValidation {
 			await this.task;
 		}
 
-		const invalidFields: FormField[] = [];
+		const invalidFields: [field: FormField, message: string][] = [];
+		const visibleFields = this.visibleFields;
 
-		for (const field of this.visibleFields) {
+		for (const field of visibleFields) {
 			const isFieldValid = await this.isFieldValid(field);
 
-			if (!isFieldValid) {
-				invalidFields.push(field);
+			if (typeof isFieldValid === 'string') {
+				invalidFields.push([field, isFieldValid]);
 			}
 		}
 
 		if (invalidFields.length) {
 			this.options.on?.formError?.(invalidFields);
 		} else {
-			this.options.on?.formSuccess?.(this.visibleFields);
+			this.options.on?.formSuccess?.(visibleFields);
 		}
 
 		return !invalidFields.length;
