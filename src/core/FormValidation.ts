@@ -1,7 +1,8 @@
 import { defaultsDeep, flatten, uniq } from 'lodash';
 
 import { FormField, FormValidationOptions as Options, Rule, ValidatorFunction } from '@/types';
-import { isElementVisible, isFormField, Task, useFormObserver, useTask } from '@/utils';
+// import { isElementVisible, isFormField, Task, useFormObserver, useTask } from '@/utils';
+import { isFormField, Task, useFormObserver, useTask } from '@/utils';
 
 export class FormValidation {
 	fields = new Map<string, FormField[]>();
@@ -33,7 +34,8 @@ export class FormValidation {
 	get visibleFields(): FormField[] {
 		const fieldList = Array.from(this.fields.values());
 
-		return flatten(fieldList).filter(isElementVisible);
+		// return flatten(fieldList).filter(isElementVisible);
+		return flatten(fieldList);
 	}
 
 	static registerValidator(name: string, validatorFunction: ValidatorFunction) {
