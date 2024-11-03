@@ -130,7 +130,7 @@ type FormField =
 Represents a function used for form field validation.
 
 ```typescript
-type ValidatorFunction = (value: any, params: any[]) => boolean | string;
+type ValidatorFunction = (value: any, params: any[], ctx: FormValidation) => boolean | string;
 ```
 
 ---

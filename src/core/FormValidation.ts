@@ -300,7 +300,7 @@ export class FormValidation {
 				continue;
 			}
 
-			const validationResult = validatorFunction(value, ruleParams);
+			const validationResult = validatorFunction(value, ruleParams, this);
 
 			if (typeof validationResult === 'string') {
 				if (errorElement) {
@@ -331,7 +331,6 @@ export class FormValidation {
 		return isValid;
 	}
 
-	// eslint-disable-next-line prettier/prettier
 	async isFormValid(): Promise<boolean> {
 		if (this.task) {
 			await this.task;

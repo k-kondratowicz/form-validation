@@ -1,3 +1,5 @@
+import { FormValidation } from '@/core';
+
 export type FormField =
 	| HTMLInputElement
 	| HTMLTextAreaElement
@@ -5,7 +7,11 @@ export type FormField =
 	| HTMLOutputElement
 	| HTMLButtonElement;
 
-export type ValidatorFunction = (value: any, params: any[]) => boolean | string;
+export type ValidatorFunction = (
+	value: any,
+	params: any[],
+	ctx: InstanceType<typeof FormValidation>,
+) => boolean | string;
 
 interface FormValidationEvents {
 	fieldError?: (field: FormField, message: string) => void;
