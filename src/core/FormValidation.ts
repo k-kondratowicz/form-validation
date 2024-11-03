@@ -318,7 +318,7 @@ export class FormValidation {
 			}
 		}
 
-		if (isValid) {
+		if (typeof isValid !== 'string') {
 			field.classList.remove('has-error');
 
 			this.options.on?.fieldSuccess?.(field);
@@ -331,6 +331,7 @@ export class FormValidation {
 		return isValid;
 	}
 
+	// eslint-disable-next-line prettier/prettier
 	async isFormValid(): Promise<boolean> {
 		if (this.task) {
 			await this.task;
