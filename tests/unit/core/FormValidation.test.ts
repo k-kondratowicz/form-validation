@@ -2,12 +2,10 @@ import { FormValidation } from 'src/core/FormValidation';
 import { email, required } from 'src/rules';
 import { createElement } from 'tests/helpers/createElement';
 
-const requiredMessage = required('') as string;
-const emailMessage = email('test@') as string;
-
 describe('FormValidation', () => {
 	let formValidation: FormValidation;
 	let form: HTMLFormElement;
+	let requiredMessage: string;
 
 	beforeAll(() => {
 		FormValidation.registerValidator('required', required);
@@ -17,6 +15,7 @@ describe('FormValidation', () => {
 	beforeEach(() => {
 		form = document.createElement('form');
 		formValidation = new FormValidation(form);
+		requiredMessage = required('', [], formValidation) as string;
 	});
 
 	afterEach(() => {

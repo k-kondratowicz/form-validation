@@ -1,27 +1,46 @@
 import { email as emailRule } from 'src/rules/email';
 
+import { FormValidation } from '@/core';
+import { required } from '@/rules';
+
 describe('email rule', () => {
+	let formValidation: FormValidation;
+	let form: HTMLFormElement;
+
+	beforeAll(() => {
+		FormValidation.registerValidator('required', required);
+	});
+
+	beforeEach(() => {
+		form = document.createElement('form');
+		formValidation = new FormValidation(form);
+	});
+
+	afterEach(() => {
+		formValidation.destroy();
+	});
+
 	it('should return true if value is empty', () => {
-		expect(emailRule('')).toBe(true);
+		expect(emailRule('', [], formValidation)).toBe(true);
 	});
 
 	it('should return true for a null value', () => {
-		expect(emailRule(null)).toBe(true);
+		expect(emailRule(null, [], formValidation)).toBe(true);
 	});
 
 	it('should return true for an undefined value', () => {
-		expect(emailRule(undefined)).toBe(true);
+		expect(emailRule(undefined, [], formValidation)).toBe(true);
 	});
 
 	it('should return true if value is a valid email', () => {
-		expect(emailRule('test@example.com')).toBe(true);
+		expect(emailRule('test@example.com', [], formValidation)).toBe(true);
 	});
 
 	it('should return true for a valid email', () => {
 		const validEmails = ['test@example.com', 'user123@gmail.com', 'john.doe@company.co'];
 
 		validEmails.forEach(value => {
-			expect(emailRule(value)).toBe(true);
+			expect(emailRule(value, [], formValidation)).toBe(true);
 		});
 	});
 
@@ -29,7 +48,7 @@ describe('email rule', () => {
 		const invalidEmails = ['test', 'user123', 'john.doe@', 'example.com', 'invalidemail'];
 
 		invalidEmails.forEach(email => {
-			expect(emailRule(email)).toBe('Provide a valid e-mail');
+			expect(emailRule(email, [], formValidation)).toBe('Provide a valid e-mail');
 		});
 	});
 });

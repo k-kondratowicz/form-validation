@@ -235,13 +235,7 @@ export class FormValidation {
 	getFieldRules(rulesStr: string) {
 		return rulesStr.split('|').map(ruleStr => {
 			const rule = this.rules.get(ruleStr);
-
-			if (rule) {
-				return rule;
-			}
-
 			const [ruleName, _params] = ruleStr.split(':');
-
 			const params = _params
 				? _params.split(',').map(param => {
 						if (param.startsWith('@')) {
@@ -251,6 +245,10 @@ export class FormValidation {
 						return param;
 					})
 				: [];
+
+			if (rule) {
+				return { ...rule, params };
+			}
 
 			const newRule = {
 				name: ruleName,

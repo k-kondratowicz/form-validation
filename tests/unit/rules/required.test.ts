@@ -1,11 +1,29 @@
 import { required } from 'src/rules/required';
 
+import { FormValidation } from '@/core';
+
 describe('required', () => {
+	let formValidation: FormValidation;
+	let form: HTMLFormElement;
+
+	beforeAll(() => {
+		FormValidation.registerValidator('required', required);
+	});
+
+	beforeEach(() => {
+		form = document.createElement('form');
+		formValidation = new FormValidation(form);
+	});
+
+	afterEach(() => {
+		formValidation.destroy();
+	});
+
 	it('should return true if value is not empty', () => {
 		const values = ['test', 123, ['item'], { key: 'value' }];
 
 		values.forEach(value => {
-			expect(required(value)).toBe(true);
+			expect(required(value, [], formValidation)).toBe(true);
 		});
 	});
 
@@ -13,7 +31,7 @@ describe('required', () => {
 		const values = ['', null, undefined, [], {}];
 
 		values.forEach(value => {
-			expect(required(value)).toBe('Field is required');
+			expect(required(value, [], formValidation)).toBe('Field is required');
 		});
 	});
 });
