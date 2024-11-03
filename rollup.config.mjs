@@ -1,11 +1,14 @@
 import { optimizeLodashImports } from '@optimize-lodash/rollup-plugin';
+import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
+import path from 'path';
 import dts from 'rollup-plugin-dts';
 import esbuild from 'rollup-plugin-esbuild';
 import { typescriptPaths } from 'rollup-plugin-typescript-paths';
 
+const __dirname = import.meta.dirname;
 const tsconfig = 'tsconfig.json';
 
 const bundle = config => ({
@@ -29,7 +32,7 @@ const sharedPlugins = [
 
 export default [
 	bundle({
-		plugins: [...sharedPlugins],
+		plugins: sharedPlugins,
 		output: [
 			{
 				file: 'dist/index.cjs.js',
@@ -40,7 +43,7 @@ export default [
 	}),
 
 	bundle({
-		plugins: [...sharedPlugins],
+		plugins: sharedPlugins,
 		output: [
 			{
 				file: 'dist/index.esm.js',
@@ -51,7 +54,7 @@ export default [
 	}),
 
 	bundle({
-		plugins: [...sharedPlugins, optimizeLodashImports(), terser()],
+		plugins: [...sharedPlugins, optimizeLodashImports()],
 		output: [
 			{
 				file: 'dist/index.umd.js',
@@ -60,6 +63,13 @@ export default [
 				esModule: false,
 				exports: 'named',
 				sourcemap: true,
+				plugins: [
+					getBabelOutputPlugin({
+						allowAllFormats: true,
+						configFile: path.resolve(__dirname, '.babelrc.json'),
+					}),
+					terser(),
+				],
 			},
 		],
 	}),
