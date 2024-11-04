@@ -220,7 +220,7 @@ export class FormValidation {
 		return this.getFieldValue(field);
 	}
 
-	private isFieldExist(field: FormField) {
+	isFieldExist(field: FormField) {
 		const list = this.fields.get(field.name);
 
 		if (!list) {
