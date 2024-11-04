@@ -68,6 +68,16 @@ Creates a new instance of `FormValidation` for the given form element.
 
 ---
 
+##### `getFieldValueByName(field: FormField): string | string[] | undefined`
+
+**Parameters:**
+- `fieldName: string` - The form field name.
+
+**Returns:**
+- `string | string[] | undefined` - The value of the form field.
+
+---
+
 ##### `isFieldValid(field: FormField): Promise<boolean>`
 
 **Parameters:**
