@@ -1,20 +1,19 @@
 import { defaultsDeep, flatten, uniq } from 'lodash';
 
 import { FormField, FormValidationOptions as Options, Rule, ValidatorFunction } from '@/types';
-// import { isElementVisible, isFormField, Task, useFormObserver, useTask } from '@/utils';
 import { isFormField, Task, useFormObserver, useTask } from '@/utils';
 
 export class FormValidation {
 	fields = new Map<string, FormField[]>();
 	errors = new Map<string, HTMLElement>();
 	rules = new Map<string, Rule>();
-	formObserver: MutationObserver;
+	private formObserver: MutationObserver;
 	static validators = new Map<string, ValidatorFunction>();
-	task?: Task;
+	private task?: Task;
 
 	constructor(
 		readonly form: HTMLFormElement,
-		public options: Options = {},
+		public options?: Options,
 	) {
 		this.options = this.mergeDefaultOptions(options ?? {});
 		this.formObserver = useFormObserver(this.form, this.formObserverCallback.bind(this));
@@ -31,10 +30,9 @@ export class FormValidation {
 		this.initAttrs();
 	}
 
-	get visibleFields(): FormField[] {
+	get fieldsArray() {
 		const fieldList = Array.from(this.fields.values());
 
-		// return flatten(fieldList).filter(isElementVisible);
 		return flatten(fieldList);
 	}
 
@@ -42,7 +40,7 @@ export class FormValidation {
 		FormValidation.validators.set(name, validatorFunction);
 	}
 
-	formObserverCallback(mutations: MutationRecord[]) {
+	private formObserverCallback(mutations: MutationRecord[]) {
 		this.task = useTask();
 
 		const addedNodes: Node[] = [];
@@ -67,7 +65,7 @@ export class FormValidation {
 		this.task.resolve();
 	}
 
-	mergeDefaultOptions(options: Options) {
+	private mergeDefaultOptions(options: Options) {
 		const defaultOptions: Options = {
 			errorClass: 'form-validation-error',
 		};
@@ -75,11 +73,11 @@ export class FormValidation {
 		return defaultsDeep(options, defaultOptions) as Options;
 	}
 
-	initAttrs() {
+	private initAttrs() {
 		this.form.setAttribute('novalidate', '');
 	}
 
-	createErrorElement(name: string, list?: FormField[]) {
+	private createErrorElement(name: string, list?: FormField[]) {
 		if (this.errors.has(name)) {
 			return;
 		}
@@ -103,7 +101,7 @@ export class FormValidation {
 		this.errors.set(name, errorElement);
 	}
 
-	createErrorElements() {
+	private createErrorElements() {
 		for (const [name, list] of this.fields) {
 			this.createErrorElement(name, list);
 		}
@@ -167,7 +165,7 @@ export class FormValidation {
 		fields.forEach(field => this.removeField(field));
 	}
 
-	getValidatorFunction(rule: string) {
+	private getValidatorFunction(rule: string) {
 		const validator = FormValidation.validators.get(rule);
 
 		if (!validator) {
@@ -222,7 +220,7 @@ export class FormValidation {
 		return this.getFieldValue(field);
 	}
 
-	isFieldExist(field: FormField) {
+	private isFieldExist(field: FormField) {
 		const list = this.fields.get(field.name);
 
 		if (!list) {
@@ -232,7 +230,7 @@ export class FormValidation {
 		return list.some(f => field.isSameNode(f));
 	}
 
-	getFieldRules(rulesStr: string) {
+	private getFieldRules(rulesStr: string) {
 		return rulesStr.split('|').map(ruleStr => {
 			const rule = this.rules.get(ruleStr);
 			const [ruleName, _params] = ruleStr.split(':');
@@ -303,12 +301,12 @@ export class FormValidation {
 			if (typeof validationResult === 'string') {
 				if (errorElement) {
 					errorElement.innerHTML =
-						this.options.errorInnerTemplate?.(validationResult) ?? validationResult;
+						this.options?.errorInnerTemplate?.(validationResult) ?? validationResult;
 				}
 
 				field.classList.add('has-error');
 
-				this.options.on?.fieldError?.(field, validationResult);
+				this.options?.on?.fieldError?.(field, validationResult);
 
 				isValid = validationResult;
 
@@ -319,7 +317,7 @@ export class FormValidation {
 		if (typeof isValid !== 'string') {
 			field.classList.remove('has-error');
 
-			this.options.on?.fieldSuccess?.(field);
+			this.options?.on?.fieldSuccess?.(field);
 
 			if (errorElement) {
 				errorElement.innerHTML = '';
@@ -329,15 +327,15 @@ export class FormValidation {
 		return isValid;
 	}
 
-	async isFormValid(): Promise<boolean> {
+	async isFormValid() {
 		if (this.task) {
 			await this.task;
 		}
 
 		const invalidFields: [field: FormField, message: string][] = [];
-		const visibleFields = this.visibleFields;
+		const fields = this.fieldsArray;
 
-		for (const field of visibleFields) {
+		for (const field of fields) {
 			const isFieldValid = await this.isFieldValid(field);
 
 			if (typeof isFieldValid === 'string') {
@@ -346,9 +344,9 @@ export class FormValidation {
 		}
 
 		if (invalidFields.length) {
-			this.options.on?.formError?.(invalidFields);
+			this.options?.on?.formError?.(invalidFields);
 		} else {
-			this.options.on?.formSuccess?.(visibleFields);
+			this.options?.on?.formSuccess?.(fields);
 		}
 
 		return !invalidFields.length;
@@ -356,5 +354,8 @@ export class FormValidation {
 
 	destroy() {
 		this.formObserver.disconnect();
+		this.fields.clear();
+		this.errors.clear();
+		this.rules.clear();
 	}
 }
