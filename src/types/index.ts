@@ -14,8 +14,8 @@ export type ValidatorFunction = (
 ) => boolean | string;
 
 interface FormValidationEvents {
-	fieldError?: (field: FormField, message: string) => void;
-	fieldSuccess?: (field?: FormField) => void;
+	fieldError?: (field: FormField | FormField[], message: string) => void;
+	fieldSuccess?: (field: FormField | FormField[]) => void;
 	formError?: (fields?: [field: FormField, message: string][]) => void;
 	formSuccess?: (fields?: FormField[]) => void;
 }

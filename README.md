@@ -30,10 +30,11 @@ Creates a new instance of `FormValidation` for the given form element.
 
 ---
 
-##### `addField(field: FormField): void`
+##### `addField(field: FormField, createError = true): void`
 
 **Parameters:**
 - `field: FormField` - The form field to add.
+- `createError: boolean` - Whether to create an error element for the field (default is `true`).
 
 ---
 
@@ -58,13 +59,30 @@ Creates a new instance of `FormValidation` for the given form element.
 
 ---
 
-##### `getFieldValue(field: FormField): string | string[] | undefined`
+##### `getFieldValue(fieldName: string): string | string[] | undefined`
 
 **Parameters:**
-- `field: FormField` - The form field.
+- `field: FormField` - The name of the form field.
 
 **Returns:**
 - `string | string[] | undefined` - The value of the form field.
+
+---
+
+##### `setFieldValue(fieldName: string, value: any): void`
+
+**Parameters:**
+
+- `fieldName: string` - The name of the form field.
+- `value: any` - The value to set for the form field.
+
+---
+
+##### `setValues(values: Record<string, any>): void`
+
+**Parameters:**
+
+- `values: Record<string, any>` - An object containing field names and their values to set.
 
 ---
 
@@ -78,10 +96,53 @@ Creates a new instance of `FormValidation` for the given form element.
 
 ---
 
-##### `isFieldValid(field: FormField): Promise<boolean>`
+##### `setFieldError(fieldName: string, message: string): void`
 
 **Parameters:**
-- `field: FormField` - The form field to validate.
+
+- `fieldName: string` - The name of the form field.
+- `message: string` - The error message to set.
+
+---
+
+##### `setErrors(errors: Record<string, string>): void`
+
+**Parameters:**
+
+- `errors: Record<string, string>` - An object containing field names and their error messages.
+
+---
+
+##### `resetErrors(): void`
+
+Resets all field errors.
+
+---
+
+##### `resetFieldError(fieldName: string): void`
+
+Resets the error for the specified field.
+
+**Parameters:**
+
+- `fieldName: string` - The name of the form field.
+
+---
+
+##### `setFieldSuccess(fieldName: string): void`
+
+Marks the field as successful.
+
+**Parameters:**
+
+- `fieldName: string` - The name of the form field.
+
+---
+
+##### `isFieldValid(field: FormField | string): Promise<boolean>`
+
+**Parameters:**
+- `field: FormField | string` - The form field or its name.
 
 **Returns:**
 - `boolean` - A promise that resolves to true if the field is valid, false otherwise.
@@ -92,6 +153,16 @@ Creates a new instance of `FormValidation` for the given form element.
 
 **Returns:**
 - `Promise<boolean>` - A promise that resolves to true if the form is valid, false otherwise.
+
+---
+
+##### `resetForm(values?: Record<string, any>): void`
+
+Resets the form fields to their initial values or provided values.
+
+**Parameters:**
+
+- `values?: Record<string, any>` - An optional object containing field names and their values to reset.
 
 ---
 
@@ -151,10 +222,10 @@ Represents events triggered during validation.
 
 ```typescript
 interface FormValidationEvents {
-	fieldError?: (field?: FormField) => void;
-	fieldSuccess?: (field?: FormField) => void;
-	formError?: (fields?: FormField[]) => void;
-	formSuccess?: (fields?: FormField[]) => void;
+    fieldError?: (field: FormField | FormField[], message: string) => void;
+    fieldSuccess?: (field?: FormField | FormField[]) => void;
+    formError?: (fields?: [field: FormField, message: string][]) => void;
+    formSuccess?: (fields?: FormField[]) => void;
 }
 ```
 
@@ -169,19 +240,5 @@ interface FormValidationOptions {
 	errorClass?: string;
 	errorInnerTemplate?: (message: string) => string;
 	on?: FormValidationEvents;
-}
-```
-
----
-
-### Rule
-
-Represents a validation rule.
-
-```typescript
-interface Rule {
-	name: string;
-	params: (string | string[] | undefined)[];
-	validator?: ValidatorFunction;
 }
 ```

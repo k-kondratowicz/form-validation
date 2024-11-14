@@ -1,6 +1,6 @@
 import { FormValidation } from 'src/core/FormValidation';
 import { email, required } from 'src/rules';
-import { createElement } from 'tests/helpers/createElement';
+import { createInput, createOption } from 'tests/helpers/createInput';
 
 describe('FormValidation', () => {
 	let formValidation: FormValidation;
@@ -11,7 +11,17 @@ describe('FormValidation', () => {
 		FormValidation.registerValidator('required', required);
 		FormValidation.registerValidator('email', email);
 	});
+it('should reset field error', () => {
+	const { field } = createInput('input', 'field', 'required');
 
+	formValidation.addField(field);
+	formValidation.setFieldError('field', 'Error message');
+
+	formValidation.resetFieldError('field');
+
+	expect(formValidation.errors.get('field')?.innerHTML).toBe('');
+	expect(field.classList.contains('has-error')).toBe(false);
+});
 	beforeEach(() => {
 		form = document.createElement('form');
 		formValidation = new FormValidation(form);
@@ -22,36 +32,32 @@ describe('FormValidation', () => {
 		formValidation.destroy();
 	});
 
-	it('should add a field', () => {
-		const field = document.createElement('input');
-		field.name = 'username';
-		field.dataset.rules = 'required';
+	it('should add a field', async () => {
+		const { field } = createInput('input', 'username', 'required', '', {
+			type: 'text',
+		});
 
 		form.appendChild(field);
-
 		formValidation.addField(field);
 
 		expect(formValidation.fields.get('username')).toContain(field);
 	});
 
 	it('should not add a field without `name` param', () => {
-		const field = document.createElement('input');
-		field.dataset.rules = 'required';
+		const { field } = createInput('input', '', 'required');
 
 		form.appendChild(field);
-
 		formValidation.addField(field);
 
 		expect(formValidation.fields.values()).not.toContain(field);
 	});
 
 	it('should remove a field', () => {
-		const field = document.createElement('input');
-		field.name = 'username';
-		field.dataset.rules = 'required';
+		const { field } = createInput('input', 'username', 'required', '', {
+			type: 'text',
+		});
 
 		form.appendChild(field);
-
 		formValidation.addField(field);
 		formValidation.removeField(field);
 
@@ -59,12 +65,11 @@ describe('FormValidation', () => {
 	});
 
 	it('should validate a field', async () => {
-		const field = document.createElement('input');
-		field.name = 'username';
-		field.dataset.rules = 'required';
+		const { field } = createInput('input', 'username', 'required', '', {
+			type: 'text',
+		});
 
 		form.appendChild(field);
-
 		formValidation.addField(field);
 
 		const isValid = await formValidation.isFieldValid(field);
@@ -73,16 +78,13 @@ describe('FormValidation', () => {
 	});
 
 	it('should validate the form', async () => {
-		const usernameField = createElement('input', 100, 50) as HTMLInputElement;
-		usernameField.name = 'username';
-		usernameField.dataset.rules = 'required';
+		const {field: usernameField} = createInput('input', 'username', 'required', '', {
+			type: 'text'
+		});
+		const {field: emailField} = createInput('input', 'email', 'required|email', '', {
+			type: 'email'
+		});
 
-		const emailField = createElement('input', 100, 50) as HTMLInputElement;
-		emailField.name = 'email';
-		emailField.dataset.rules = 'required|email';
-
-		form.appendChild(usernameField);
-		form.appendChild(emailField);
 
 		formValidation.addField(usernameField);
 		formValidation.addField(emailField);
@@ -101,142 +103,152 @@ describe('FormValidation', () => {
 	// });
 
 	it('should create error element', () => {
-		const field = document.createElement('input');
-		field.name = 'username';
-		field.dataset.rules = 'required';
-		form.appendChild(field);
+		const { field } = createInput('input', 'username', 'required', '', {
+			type: 'text',
+		});
 
+		form.appendChild(field);
 		formValidation.addField(field);
-		// formValidation.createErrorElement(field.name);
 
 		expect(formValidation.errors.has(field.name)).toBe(true);
 	});
 
 	it('should get field value', () => {
-		const selectField = document.createElement('select');
-		selectField.name = 'selectField';
-		selectField.multiple = true;
-		const option1 = document.createElement('option');
-		option1.value = 'option1';
-		option1.selected = true;
-		const option2 = document.createElement('option');
-		option2.value = 'option2';
-		option2.selected = true;
-		selectField.appendChild(option1);
-		selectField.appendChild(option2);
+		const { field: selectField, append } = createInput('select', 'selectField', 'required', '', {
+			multiple: true,
+		});
+		append(createOption('option1', true));
+		append(createOption('option2', true));
 
-		const textareaField = document.createElement('textarea');
-		textareaField.name = 'textareaField';
-		textareaField.value = 'Textarea value';
+		const { field: textareaField } = createInput(
+			'textarea',
+			'textareaField',
+			'required',
+			'Textarea value',
+		);
 
-		const buttonField = document.createElement('button');
-		buttonField.name = 'buttonField';
-		buttonField.value = 'Button value';
+		const { field: buttonField } = createInput('button', 'buttonField', 'required', 'Button value');
 
-		const outputField = document.createElement('output');
-		outputField.name = 'outputField';
-		outputField.value = 'Output value';
+		const { field: outputField } = createInput('output', 'outputField', 'required', 'Output value');
 
-		const checkboxField1 = document.createElement('input');
-		checkboxField1.type = 'checkbox';
-		checkboxField1.name = 'checkboxField';
-		checkboxField1.value = 'checkbox1';
-		checkboxField1.checked = true;
+		const { field: checkboxField1 } = createInput(
+			'input',
+			'checkboxField',
+			'required',
+			'checkbox1',
+			{
+				type: 'checkbox',
+				checked: true,
+			},
+		);
+		const { field: checkboxField2 } = createInput(
+			'input',
+			'checkboxField',
+			'required',
+			'checkbox2',
+			{
+				type: 'checkbox',
+				checked: false,
+			},
+		);
 
-		const checkboxField2 = document.createElement('input');
-		checkboxField2.type = 'checkbox';
-		checkboxField2.name = 'checkboxField';
-		checkboxField2.value = 'checkbox2';
-		checkboxField2.checked = false;
+		const { field: radioField1 } = createInput('input', 'radioField', 'required', 'radio1', {
+			type: 'radio',
+			checked: true,
+		});
 
-		const radioField1 = document.createElement('input');
-		radioField1.type = 'radio';
-		radioField1.name = 'radioField';
-		radioField1.value = 'radio1';
-		radioField1.checked = true;
+		const { field: radioField2 } = createInput('input', 'radioField', 'required', 'radio2', {
+			type: 'radio',
+			checked: false,
+		});
 
-		const radioField2 = document.createElement('input');
-		radioField2.type = 'radio';
-		radioField2.name = 'radioField';
-		radioField2.value = 'radio2';
-		radioField2.checked = false;
+		formValidation.addFields([
+			selectField,
+			textareaField,
+			buttonField,
+			outputField,
+			checkboxField1,
+			checkboxField2,
+			radioField1,
+			radioField2,
+		]);
 
-		form.appendChild(selectField);
-		form.appendChild(textareaField);
-		form.appendChild(buttonField);
-		form.appendChild(outputField);
-		form.appendChild(checkboxField1);
-		form.appendChild(checkboxField2);
-		form.appendChild(radioField1);
-		form.appendChild(radioField2);
-
-		formValidation.addField(selectField);
-		formValidation.addField(textareaField);
-		formValidation.addField(buttonField);
-		formValidation.addField(outputField);
-		formValidation.addField(checkboxField1);
-		formValidation.addField(checkboxField2);
-		formValidation.addField(radioField1);
-		formValidation.addField(radioField2);
-
-		const selectFieldValue = formValidation.getFieldValue(selectField);
+		const selectFieldValue = formValidation.getFieldValue('selectField');
 		expect(selectFieldValue).toEqual(['option1', 'option2']);
 
-		const textareaFieldValue = formValidation.getFieldValue(textareaField);
+		const textareaFieldValue = formValidation.getFieldValue('textareaField');
 		expect(textareaFieldValue).toEqual('Textarea value');
 
-		const buttonFieldValue = formValidation.getFieldValue(buttonField);
+		const buttonFieldValue = formValidation.getFieldValue('buttonField');
 		expect(buttonFieldValue).toEqual('Button value');
 
-		const outputFieldValue = formValidation.getFieldValue(outputField);
+		const outputFieldValue = formValidation.getFieldValue('outputField');
 		expect(outputFieldValue).toEqual('Output value');
 
-		const checkboxFieldValue = formValidation.getFieldValue(checkboxField1);
+		const checkboxFieldValue = formValidation.getFieldValue('checkboxField');
 		expect(checkboxFieldValue).toEqual(['checkbox1']);
 
-		const radioFieldValue = formValidation.getFieldValue(radioField1);
+		const radioFieldValue = formValidation.getFieldValue('radioField');
 		expect(radioFieldValue).toEqual('radio1');
 	});
 
-	it('should get field value by name', () => {
-		const field1 = document.createElement('input');
-		field1.name = 'field1';
-		field1.type = 'text';
-		field1.value = 'Value 1';
+	it('should set value for text input', () => {
+		const { field } = createInput('input', 'username', 'required', '', {
+			type: 'text',
+		});
 
-		const field2 = document.createElement('input');
-		field2.name = 'field2';
-		field2.type = 'checkbox';
-		field2.value = 'Value 2';
-		field2.checked = true;
+		formValidation.addField(field);
+		formValidation.setFieldValue('username', 'John Doe');
 
-		const field3 = document.createElement('input');
-		field3.name = 'field2';
-		field3.type = 'checkbox';
-		field3.value = 'Value 3';
-		field3.checked = false;
+		expect(field.value).toBe('John Doe');
+	});
 
-		form.appendChild(field1);
-		form.appendChild(field2);
-		form.appendChild(field3);
+	it('should set field value for select input', () => {
+		const { field, append } = createInput('select', 'selectField', 'required', '', {
+			multiple: false,
+		});
+		append(createOption('option1', false));
+		append(createOption('option2', false));
 
-		formValidation.addField(field1);
-		formValidation.addField(field2);
-		formValidation.addField(field3);
+		formValidation.addField(field);
+		formValidation.setFieldValue('selectField', 'option2');
 
-		const fieldValue1 = formValidation.getFieldValueByName('field1');
-		expect(fieldValue1).toEqual('Value 1');
+		expect(field.value).toBe('option2');
+	});
 
-		const fieldValue2 = formValidation.getFieldValueByName('field2');
-		expect(fieldValue2).toEqual(['Value 2']);
+	it('should set field value for select (multiple) input', () => {
+		const { field, append } = createInput('select', 'selectField', 'required', '', {
+			multiple: true,
+		});
+		append(createOption('option1', false));
+		append(createOption('option2', false));
+
+		formValidation.addField(field);
+		formValidation.setFieldValue('selectField', ['option1', 'option2']);
+
+		expect([...(field as HTMLSelectElement).selectedOptions].map(s => s.value)).toEqual([
+			'option1',
+			'option2',
+		]);
+	});
+
+	it('should set value for checkbox input', () => {
+		const { field } = createInput('input', 'checkboxField', 'required', 'checkbox1', {
+			type: 'checkbox',
+			checked: true,
+		});
+
+		form.appendChild(field);
+
+		formValidation.addField(field);
+		formValidation.setFieldValue('checkboxField', false);
+
+		expect((field as HTMLInputElement).checked).toBe(false);
 	});
 
 	it('should check if a field exists', () => {
-		const field1 = document.createElement('input');
-		field1.name = 'field1';
-
-		const field2 = document.createElement('input');
-		field2.name = 'field2';
+		const { field: field1 } = createInput('input', 'field1', 'required');
+		const { field: field2 } = createInput('input', 'field2', 'required');
 
 		formValidation.addField(field1);
 
@@ -331,11 +343,9 @@ describe('FormValidation', () => {
 			},
 		});
 
-		const invalidField = createElement('input', 100, 50) as HTMLInputElement;
-		invalidField.name = 'invalidField';
-		invalidField.dataset.rules = 'required';
-
-		form.appendChild(invalidField);
+		const { field: invalidField } = createInput('input', 'invalidField', 'required', '', {
+			type: 'text',
+		});
 
 		formValidation.addField(invalidField);
 
@@ -352,12 +362,9 @@ describe('FormValidation', () => {
 			},
 		});
 
-		const validField = createElement('input', 100, 50) as HTMLInputElement;
-		validField.name = 'validField';
-		validField.dataset.rules = 'required';
-		validField.value = 'Valid value';
-
-		form.appendChild(validField);
+		const { field: validField } = createInput('input', 'validField', 'required', 'Valid value', {
+			type: 'text',
+		});
 
 		formValidation.addField(validField);
 
@@ -374,12 +381,9 @@ describe('FormValidation', () => {
 			},
 		});
 
-		const invalidField = createElement('input', 100, 50) as HTMLInputElement;
-		invalidField.name = 'invalidField';
-		invalidField.dataset.rules = 'required';
-		invalidField.value = '';
-
-		form.appendChild(invalidField);
+		const { field: invalidField } = createInput('input', 'invalidField', 'required', '', {
+			type: 'text',
+		});
 
 		formValidation.addField(invalidField);
 
@@ -397,17 +401,96 @@ describe('FormValidation', () => {
 			},
 		});
 
-		const validField = createElement('input', 100, 50) as HTMLInputElement;
-		validField.name = 'validField';
-		validField.dataset.rules = 'required';
-		validField.value = 'Valid value';
-
-		f.appendChild(validField);
+		const { field: validField } = createInput('input', 'validField', 'required', 'Valid value', {
+			type: 'text',
+		});
 
 		instance.addField(validField);
 
 		await instance.isFormValid();
 
 		expect(fieldSuccessCallback).toHaveBeenCalledWith(validField);
+	});
+
+	it('should set values for multiple fields', () => {
+		const { field: field1 } = createInput('input', 'field1', 'required');
+		const { field: field2 } = createInput('input', 'field2', 'required');
+
+		formValidation.addField(field1);
+		formValidation.addField(field2);
+
+		formValidation.setValues({
+			field1: 'Value 1',
+			field2: 'Value 2',
+		});
+
+		expect(field1.value).toBe('Value 1');
+		expect(field2.value).toBe('Value 2');
+	});
+
+	it('should set field success', () => {
+		const { field } = createInput('input', 'field', 'required');
+
+		formValidation.addField(field);
+		formValidation.setFieldSuccess('field');
+
+		expect(formValidation.errors.get('field')?.innerHTML).toBe('');
+		expect(field.classList.contains('has-error')).toBe(false);
+	});
+
+	it('should set field error', () => {
+		const { field } = createInput('input', 'field', 'required');
+
+		formValidation.addField(field);
+		formValidation.setFieldError('field', 'Error message');
+
+		expect(formValidation.errors.get('field')?.innerHTML).toBe('Error message');
+		expect(field.classList.contains('has-error')).toBe(true);
+	});
+
+	it('should reset field error', () => {
+		const { field } = createInput('input', 'field', 'required');
+
+		formValidation.addField(field);
+		formValidation.setFieldError('field', 'Error message');
+
+		formValidation.resetFieldError('field');
+
+		expect(formValidation.errors.get('field')?.innerHTML).toBe('');
+		expect(field.classList.contains('has-error')).toBe(false);
+	});
+
+	it('should set errors for fields', () => {
+		const { field: field1 } = createInput('input', 'field1', 'required');
+		const { field: field2 } = createInput('input', 'field2', 'required');
+
+		formValidation.addField(field1);
+		formValidation.addField(field2);
+
+		formValidation.setErrors({
+			field1: 'Error message 1',
+			field2: 'Error message 2',
+		});
+
+		expect(formValidation.errors.get('field1')?.innerHTML).toBe('Error message 1');
+		expect(formValidation.errors.get('field2')?.innerHTML).toBe('Error message 2');
+	});
+
+	it('should reset all field errors', () => {
+		const { field: field1 } = createInput('input', 'field1', 'required');
+		const { field: field2 } = createInput('input', 'field2', 'required');
+
+		formValidation.addField(field1);
+		formValidation.addField(field2);
+
+		formValidation.setFieldError('field1', 'Error message 1');
+		formValidation.setFieldError('field2', 'Error message 2');
+
+		formValidation.resetErrors();
+
+		expect(formValidation.errors.get('field1')?.innerHTML).toBe('');
+		expect(formValidation.errors.get('field2')?.innerHTML).toBe('');
+		expect(field1.classList.contains('has-error')).toBe(false);
+		expect(field2.classList.contains('has-error')).toBe(false);
 	});
 });

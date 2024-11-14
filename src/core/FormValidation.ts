@@ -1,4 +1,4 @@
-import { defaultsDeep, flatten, uniq } from 'lodash';
+import { defaultsDeep, flatten, isBoolean, isString, uniq } from 'lodash';
 
 import { FormField, FormValidationOptions as Options, Rule, ValidatorFunction } from '@/types';
 import { isFormField, Task, useFormObserver, useTask } from '@/utils';
@@ -7,6 +7,7 @@ export class FormValidation {
 	fields = new Map<string, FormField[]>();
 	errors = new Map<string, HTMLElement>();
 	rules = new Map<string, Rule>();
+	initialValues = new Map<string, any>();
 	private formObserver: MutationObserver;
 	static validators = new Map<string, ValidatorFunction>();
 	private task?: Task;
@@ -107,7 +108,7 @@ export class FormValidation {
 		}
 	}
 
-	addField(field: FormField) {
+	addField(field: FormField, createError = true) {
 		const { name } = field;
 
 		if (!name) {
@@ -123,11 +124,16 @@ export class FormValidation {
 			this.fields.set(name, [field]);
 		}
 
-		this.createErrorElement(name);
+		this.initialValues.set(name, this.getFieldValue(name));
+
+		if (createError) {
+			this.createErrorElement(name);
+		}
 	}
 
 	addFields(fields: FormField[]) {
-		fields.forEach(field => this.addField(field));
+		fields.forEach(field => this.addField(field, false));
+		this.createErrorElements();
 	}
 
 	removeField(field: FormField) {
@@ -177,7 +183,15 @@ export class FormValidation {
 		return validator;
 	}
 
-	getFieldValue(field: FormField) {
+	getFieldValue(fieldName: string) {
+		const group = this.fields.get(fieldName);
+
+		if (!group) {
+			return;
+		}
+
+		const field = group[0];
+
 		if (field instanceof HTMLSelectElement) {
 			return field.multiple ? Array.from(field.selectedOptions).map(opt => opt.value) : field.value;
 		}
@@ -185,49 +199,87 @@ export class FormValidation {
 		if (
 			field instanceof HTMLTextAreaElement ||
 			field instanceof HTMLButtonElement ||
-			field instanceof HTMLOutputElement ||
-			(field instanceof HTMLInputElement && field.type === 'radio')
+			field instanceof HTMLOutputElement
 		) {
 			return field.value;
 		}
 
-		if (field instanceof HTMLInputElement && field.type === 'checkbox') {
-			const list = this.fields.get(field.name);
-
-			if (!list) {
-				return;
+		if (field instanceof HTMLInputElement) {
+			if (field.type === 'checkbox') {
+				return group.filter(f => f instanceof HTMLInputElement && f.checked).map(f => f.value);
 			}
 
-			return list.filter(f => f instanceof HTMLInputElement && f.checked).map(f => f.value);
+			if (field.type === 'radio') {
+				return group.find(f => f instanceof HTMLInputElement && f.checked)?.value;
+			}
 		}
 
 		return field.value;
 	}
 
-	getFieldValueByName(name: string) {
-		const list = this.fields.get(name);
+	setFieldValue(fieldName: string, value: any) {
+		const group = this.fields.get(fieldName);
 
-		if (!list) {
+		if (!group) {
 			return;
 		}
 
-		const field = list.length === 1 ? list[0] : list;
+		const field = group[0];
 
-		if (Array.isArray(field)) {
-			return list.filter(f => f instanceof HTMLInputElement && f.checked).map(f => f.value);
+		if (field instanceof HTMLSelectElement) {
+			if (!field.multiple) {
+				field.value = value;
+				return;
+			}
+
+			const options = Array.from(field.options);
+
+			options.forEach(opt => {
+				if (Array.isArray(value)) {
+					opt.selected = value.includes(opt.value);
+				} else {
+					opt.selected = opt.value === value;
+				}
+			});
+
+			return;
 		}
 
-		return this.getFieldValue(field);
+		if (
+			field instanceof HTMLInputElement &&
+			(field.type === 'checkbox' || field.type === 'radio')
+		) {
+			group
+				.filter(f => f instanceof HTMLInputElement)
+				.forEach(f => {
+					if (Array.isArray(value)) {
+						f.checked = value.includes(f.value);
+					} else {
+						f.checked = isBoolean(value) && value ? value : f.value === value;
+					}
+				});
+
+			return;
+		}
+
+		field.value = value;
 	}
 
-	isFieldExist(field: FormField) {
-		const list = this.fields.get(field.name);
+	setValues(values: Record<string, any>) {
+		Object.entries(values).forEach(([name, value]) => {
+			const list = this.fields.get(name);
 
-		if (!list) {
-			return false;
-		}
+			if (!list) {
+				return;
+			}
 
-		return list.some(f => field.isSameNode(f));
+			this.setFieldValue(name, value);
+		});
+	}
+
+	isFieldExist(field: FormField | string) {
+		const name = isString(field) ? field : field.name;
+		return !!this.fields.get(name);
 	}
 
 	private getFieldRules(rulesStr: string) {
@@ -237,7 +289,7 @@ export class FormValidation {
 			const params = _params
 				? _params.split(',').map(param => {
 						if (param.startsWith('@')) {
-							return this.getFieldValueByName(param.substring(1));
+							return this.getFieldValue(param.substring(1));
 						}
 
 						return param;
@@ -260,32 +312,101 @@ export class FormValidation {
 		});
 	}
 
-	async isFieldValid(field: FormField) {
+	setFieldError(fieldName: string, message: string) {
+		const errorElement = this.errors.get(fieldName);
+		const fields = this.fields.get(fieldName);
+
+		if (errorElement) {
+			errorElement.innerHTML = this.options?.errorInnerTemplate?.(message) ?? message;
+		}
+
+		if (!fields) {
+			return;
+		}
+
+		fields.forEach(f => f.classList.add('has-error'));
+
+		this.options?.on?.fieldError?.(fields.length > 1 ? fields : fields[0], message);
+	}
+
+	setErrors(errors: Record<string, string>) {
+		Object.entries(errors).forEach(([name, message]) => {
+			const fields = this.fields.get(name);
+
+			if (!fields) {
+				return;
+			}
+
+			this.setFieldError(name, message);
+		});
+	}
+
+	resetErrors() {
+		this.fields.forEach((_, name) => this.resetFieldError(name));
+	}
+
+	resetFieldError(fieldName: string) {
+		const errorElement = this.errors.get(fieldName);
+		const fields = this.fields.get(fieldName);
+
+		if (errorElement && errorElement.innerHTML) {
+			errorElement.innerHTML = '';
+		}
+
+		if (!fields) {
+			return;
+		}
+
+		fields?.forEach(f => f.classList.remove('has-error'));
+	}
+
+	setFieldSuccess(fieldName: string) {
+		const fields = this.fields.get(fieldName);
+
+		this.resetFieldError(fieldName);
+
+		if (!fields) {
+			return;
+		}
+
+		this.options?.on?.fieldSuccess?.(fields.length > 1 ? fields : fields[0]);
+	}
+
+	async isFieldValid(field: FormField | string) {
 		if (this.task) {
 			await this.task;
 		}
 
 		let isValid: true | string = true;
+		const name = isString(field) ? field : field.name;
 
 		if (!this.isFieldExist(field)) {
 			console.error(
 				'[FormValidation] Field ',
 				field,
-				' must be added first, use "addField" method.',
+				' must be added first, use "addField" or "addFields" method.',
 			);
 
 			return isValid;
 		}
 
-		const { name, dataset } = field;
-		const value = this.getFieldValue(field);
+		const fields = this.fields.get(name)!;
+		const rulesArray = [
+			...new Set(
+				fields
+					.map(f => f.dataset.rules)
+					.filter((v): v is string => !!v)
+					.flatMap(r => r.split('|')),
+			),
+		];
 
-		if (!dataset.rules) {
+		if (!rulesArray.length) {
 			return isValid;
 		}
 
-		const errorElement = this.errors.get(name);
-		const rules = this.getFieldRules(dataset.rules);
+		const fieldsRules = rulesArray.join('|');
+		const value = this.getFieldValue(name);
+		const rules = this.getFieldRules(fieldsRules);
 
 		for (let index = 0; index < rules.length; index++) {
 			const { params: ruleParams, validator: validatorFunction } = rules[index];
@@ -299,14 +420,7 @@ export class FormValidation {
 			const validationResult = validatorFunction(value, ruleParams, this);
 
 			if (typeof validationResult === 'string') {
-				if (errorElement) {
-					errorElement.innerHTML =
-						this.options?.errorInnerTemplate?.(validationResult) ?? validationResult;
-				}
-
-				field.classList.add('has-error');
-
-				this.options?.on?.fieldError?.(field, validationResult);
+				this.setFieldError(name, validationResult);
 
 				isValid = validationResult;
 
@@ -315,13 +429,7 @@ export class FormValidation {
 		}
 
 		if (typeof isValid !== 'string') {
-			field.classList.remove('has-error');
-
-			this.options?.on?.fieldSuccess?.(field);
-
-			if (errorElement) {
-				errorElement.innerHTML = '';
-			}
+			this.setFieldSuccess(name);
 		}
 
 		return isValid;
@@ -352,10 +460,26 @@ export class FormValidation {
 		return !invalidFields.length;
 	}
 
+	resetForm(values?: Record<string, any>) {
+		this.fields.forEach((fields, name) => {
+			const field = fields[0];
+			const passedValue = values?.[name];
+			const initialValue = this.initialValues.get(name);
+
+			this.setFieldValue(
+				name,
+				passedValue ?? initialValue ?? (['checkbox', 'radio'].includes(field.type) ? false : ''),
+			);
+
+			this.resetFieldError(name);
+		});
+	}
+
 	destroy() {
 		this.formObserver.disconnect();
 		this.fields.clear();
 		this.errors.clear();
 		this.rules.clear();
+		this.initialValues.clear();
 	}
 }
