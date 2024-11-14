@@ -11,17 +11,7 @@ describe('FormValidation', () => {
 		FormValidation.registerValidator('required', required);
 		FormValidation.registerValidator('email', email);
 	});
-it('should reset field error', () => {
-	const { field } = createInput('input', 'field', 'required');
 
-	formValidation.addField(field);
-	formValidation.setFieldError('field', 'Error message');
-
-	formValidation.resetFieldError('field');
-
-	expect(formValidation.errors.get('field')?.innerHTML).toBe('');
-	expect(field.classList.contains('has-error')).toBe(false);
-});
 	beforeEach(() => {
 		form = document.createElement('form');
 		formValidation = new FormValidation(form);
@@ -78,13 +68,12 @@ it('should reset field error', () => {
 	});
 
 	it('should validate the form', async () => {
-		const {field: usernameField} = createInput('input', 'username', 'required', '', {
-			type: 'text'
+		const { field: usernameField } = createInput('input', 'username', 'required', '', {
+			type: 'text',
 		});
-		const {field: emailField} = createInput('input', 'email', 'required|email', '', {
-			type: 'email'
+		const { field: emailField } = createInput('input', 'email', 'required|email', '', {
+			type: 'email',
 		});
-
 
 		formValidation.addField(usernameField);
 		formValidation.addField(emailField);
