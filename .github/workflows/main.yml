@@ -49,6 +49,13 @@ jobs:
     if: github.ref == 'refs/heads/main'
     container:
       image: node:latest
+
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
