@@ -1,7 +1,6 @@
-import { isString } from 'lodash';
-
 import { EMAIL_REGEX } from '@/constants/regex';
 import { ValidatorFunction } from '@/types';
+import { isString } from '@/utils';
 
 export const email: ValidatorFunction = (value: any): boolean | string => {
 	if (!value) {

@@ -1,12 +1,15 @@
-import { isFormField } from 'src/utils/isFormField';
+import { createInput } from 'tests/helpers/createInput';
+
+import { FormFieldTag } from '@/types';
+import { isFormField } from '@/utils/isFormField';
 
 describe('isFormField', () => {
 	it('should return true for valid form fields', () => {
-		const tags = ['input', 'textarea', 'select', 'output', 'button'];
+		const tags: FormFieldTag[] = ['input', 'textarea', 'select', 'output', 'button'];
 
 		tags.forEach(tag => {
-			const element = document.createElement(tag);
-			expect(isFormField(element)).toBe(true);
+			const element = createInput(tag, tag, 'required');
+			expect(isFormField(element.field)).toBe(true);
 		});
 	});
 
