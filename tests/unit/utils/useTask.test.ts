@@ -1,4 +1,4 @@
-import { useTask } from 'src/utils/useTask';
+import { useTask } from '@/utils/useTask';
 
 describe('useTask', () => {
 	it('should resolve the task', async () => {

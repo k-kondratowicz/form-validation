@@ -1,7 +1,7 @@
 import { ValidatorFunction } from '@/types';
 
-import { FormValidation } from './FormValidation';
+import { ValidatorManager } from './ValidatorManager';
 
 export function registerValidator(name: string, validatorFunction: ValidatorFunction) {
-	FormValidation.registerValidator(name, validatorFunction);
+	ValidatorManager.registerValidator(name, validatorFunction);
 }

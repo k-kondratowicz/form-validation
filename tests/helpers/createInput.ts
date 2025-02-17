@@ -1,5 +1,7 @@
+import { FormFieldTag } from '@/types';
+
 export function createInput(
-	tag: 'input' | 'textarea' | 'output' | 'select' | 'button',
+	tag: FormFieldTag,
 	name: string,
 	rules: string,
 	value?: string,

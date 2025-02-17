@@ -1,5 +1,4 @@
-import { FormValidation } from 'src/core/FormValidation';
-import { registerValidator } from 'src/core/registerValidator';
+import { registerValidator, ValidatorManager } from '@/core';
 
 describe('registerValidator', () => {
 	it('should register a validator function with the given name', () => {
@@ -8,6 +7,6 @@ describe('registerValidator', () => {
 
 		registerValidator(name, validatorFunction);
 
-		expect(FormValidation.validators.has(name)).toBe(true);
+		expect(ValidatorManager.validators.has(name)).toBe(true);
 	});
 });

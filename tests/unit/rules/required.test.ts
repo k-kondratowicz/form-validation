@@ -1,13 +1,12 @@
-import { required } from 'src/rules/required';
-
-import { FormValidation } from '@/core';
+import { FormValidation, ValidatorManager } from '@/core';
+import { required } from '@/rules';
 
 describe('required', () => {
 	let formValidation: FormValidation;
 	let form: HTMLFormElement;
 
 	beforeAll(() => {
-		FormValidation.registerValidator('required', required);
+		ValidatorManager.registerValidator('required', required);
 	});
 
 	beforeEach(() => {

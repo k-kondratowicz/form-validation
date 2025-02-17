@@ -1,14 +1,12 @@
-import { email as emailRule } from 'src/rules/email';
-
-import { FormValidation } from '@/core';
-import { required } from '@/rules';
+import { FormValidation, ValidatorManager } from '@/core';
+import { email as emailRule, required } from '@/rules';
 
 describe('email rule', () => {
 	let formValidation: FormValidation;
 	let form: HTMLFormElement;
 
 	beforeAll(() => {
-		FormValidation.registerValidator('required', required);
+		ValidatorManager.registerValidator('required', required);
 	});
 
 	beforeEach(() => {
