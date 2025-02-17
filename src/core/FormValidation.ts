@@ -39,7 +39,7 @@ export class FormValidation {
 		this.initAttrs();
 	}
 
-	get fieldsArray() {
+	get allFields() {
 		return this.fieldManager.allFields;
 	}
 
@@ -61,7 +61,7 @@ export class FormValidation {
 		this.form.setAttribute('novalidate', '');
 	}
 
-	getFieldRules(rules: string[]) {
+	private getFieldRules(rules: string[]) {
 		return rules.map(ruleStr => {
 			const rule = this.rules.get(ruleStr);
 			const [ruleName, _params] = ruleStr.split(':');
@@ -91,7 +91,7 @@ export class FormValidation {
 		});
 	}
 
-	parseFieldRules(fieldName: string) {
+	private parseFieldRules(fieldName: string) {
 		const group = this.fieldManager.fields.get(fieldName);
 
 		if (!group) {
@@ -172,7 +172,7 @@ export class FormValidation {
 		}
 
 		const invalidFields: [field: FormField, message: string][] = [];
-		const fields = this.fieldsArray;
+		const fields = this.allFields;
 
 		for (const field of fields) {
 			const isFieldValid = await this.isFieldValid(field);
@@ -191,12 +191,12 @@ export class FormValidation {
 		return !invalidFields.length;
 	}
 
-	destroy(shuldClearValidators = false) {
+	destroy(shouldClearValidators = false) {
 		this.formObserver.destroy();
 		this.fieldManager.destroy();
 		this.rules.clear();
 
-		if (shuldClearValidators) {
+		if (shouldClearValidators) {
 			ValidatorManager.destroy();
 		}
 	}
