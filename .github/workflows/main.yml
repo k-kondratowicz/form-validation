@@ -61,6 +61,10 @@ jobs:
             .yarn/cache
           key: ${{ runner.os }}-yarn-berry-${{ github.ref_name }}
 
+      - uses: actions/setup-node@v3
+        with:
+          registry-url: 'https://npm.pkg.github.com'
+
       - name: Install dependencies
         run: yarn
 
@@ -71,6 +75,6 @@ jobs:
           # echo "always-auth=true" >> .npmrc
 
       - name: Publish package
-        run: yarn publish --access restricted
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: yarn publish --access restricted
