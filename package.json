@@ -17,6 +17,9 @@
         "type": "git",
         "url": "git@github.com:k-kondratowicz/form-validation.git"
     },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
+    },
     "author": "Kamil Kondratowicz",
     "license": "MIT",
     "dependencies": {},
