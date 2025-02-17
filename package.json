@@ -1,5 +1,5 @@
 {
-    "name": "@kamil.kondratowicz/form-validation",
+    "name": "@k-kondratowicz/form-validation",
     "version": "1.1.0",
     "description": "",
     "main": "dist/index.cjs.js",
@@ -15,13 +15,11 @@
     },
     "repository": {
         "type": "git",
-        "url": "git@gitlab.owd.io:kamil.kondratowicz/form-validation.git"
+        "url": "git@github.com:k-kondratowicz/form-validation.git"
     },
     "author": "Kamil Kondratowicz",
     "license": "MIT",
-    "dependencies": {
-        "lodash": "^4.17.21"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@babel/core": "^7.26.0",
         "@babel/plugin-proposal-class-properties": "^7.18.6",
@@ -30,7 +28,6 @@
         "@babel/plugin-transform-runtime": "^7.25.9",
         "@babel/preset-env": "^7.26.0",
         "@jest/globals": "^29.7.0",
-        "@optimize-lodash/rollup-plugin": "^4.0.4",
         "@rollup/plugin-babel": "^6.0.4",
         "@rollup/plugin-commonjs": "^25.0.7",
         "@rollup/plugin-node-resolve": "^15.2.3",
@@ -39,7 +36,6 @@
         "@types/babel__core": "^7.20.5",
         "@types/jest": "^29.5.12",
         "@types/jsdom": "^21.1.6",
-        "@types/lodash": "^4.14.202",
         "@types/node": "^20.11.28",
         "@typescript-eslint/eslint-plugin": "^6.21.0",
         "@typescript-eslint/parser": "^6.21.0",

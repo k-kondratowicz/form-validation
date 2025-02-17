@@ -1,4 +1,3 @@
-import { optimizeLodashImports } from '@optimize-lodash/rollup-plugin';
 import { getBabelOutputPlugin } from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
@@ -13,7 +12,6 @@ const tsconfig = 'tsconfig.json';
 
 const bundle = config => ({
 	input: 'src/index.ts',
-	external: ['lodash'],
 	...config,
 });
 
@@ -54,7 +52,7 @@ export default [
 	}),
 
 	bundle({
-		plugins: [...sharedPlugins, optimizeLodashImports()],
+		plugins: sharedPlugins,
 		output: [
 			{
 				file: 'dist/index.umd.js',
