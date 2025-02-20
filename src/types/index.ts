@@ -1,5 +1,7 @@
 import { FormValidation } from '@/core';
 
+export type Promisable<T> = T | PromiseLike<T>;
+
 export type FormFieldTag = 'input' | 'textarea' | 'output' | 'select' | 'button';
 
 export type FormField =
@@ -13,12 +15,7 @@ export type ValidatorFunction = (
 	value: any,
 	params: any[],
 	ctx: InstanceType<typeof FormValidation>,
-) => boolean | string;
-
-export interface ErrorManagerOptions {
-	errorClass?: string;
-	errorInnerTemplate?: (message: string) => string;
-}
+) => Promisable<boolean | string>;
 
 export interface FieldManagerOptions {
 	errorClass?: string;

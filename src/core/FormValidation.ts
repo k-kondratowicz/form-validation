@@ -144,7 +144,7 @@ export class FormValidation {
 				continue;
 			}
 
-			const validationResult = validatorFunction(value, ruleParams, this);
+			const validationResult = await validatorFunction(value, ruleParams, this);
 
 			if (typeof validationResult === 'string') {
 				this.fieldManager.setFieldError(name, validationResult, (field, message) => {
