@@ -43,7 +43,7 @@ export class FieldManager {
 	}
 
 	addFields(fields: FormField[], createError = true) {
-		const oldFields = this.fields;
+		const oldFields = new Map(this.fields);
 
 		fields.forEach(field => this.addField(field, false));
 
@@ -51,7 +51,7 @@ export class FieldManager {
 			return;
 		}
 
-		const newFields = [...this.fields.entries()].filter(([k]) => oldFields.get(k));
+		const newFields = [...this.fields.entries()].filter(([k]) => !oldFields.get(k));
 		this.createErrorElements(newFields);
 	}
 
