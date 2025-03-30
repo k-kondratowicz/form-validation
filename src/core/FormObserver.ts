@@ -1,5 +1,5 @@
 import { FormField } from '@/types';
-import { isFormField, Task, useTask } from '@/utils';
+import { isFormField, Task } from '@/utils';
 
 export class FormObserver {
 	task?: Task;
@@ -15,7 +15,7 @@ export class FormObserver {
 	}
 
 	private mutationCallback(mutations: MutationRecord[]) {
-		this.task = useTask();
+		this.task = new Task();
 
 		const addedNodes: Node[] = [];
 		const removedNodes: Node[] = [];

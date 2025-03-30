@@ -7,4 +7,4 @@ export * from './isPlainObject';
 export * from './isRadioOrCheckbox';
 export * from './isSelect';
 export * from './isString';
-export * from './useTask';
+export * from './task';

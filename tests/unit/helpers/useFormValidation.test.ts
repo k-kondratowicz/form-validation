@@ -1,4 +1,5 @@
-import { FormValidation, useFormValidation } from '@/core';
+import { FormValidation } from '@/core';
+import { useFormValidation } from '@/helpers';
 
 describe('useFormValidation', () => {
 	it('should create a new instance of FormValidation', () => {

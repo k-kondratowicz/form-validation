@@ -1,4 +1,5 @@
-import { registerValidator, ValidatorManager } from '@/core';
+import { ValidatorManager } from '@/core';
+import { registerValidator } from '@/helpers';
 
 describe('registerValidator', () => {
 	it('should register a validator function with the given name', () => {

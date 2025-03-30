@@ -1,8 +1,8 @@
-import { useTask } from '@/utils/useTask';
+import { Task } from '@/utils';
 
-describe('useTask', () => {
+describe('Task', () => {
 	it('should resolve the task', async () => {
-		const task = useTask<string>();
+		const task = new Task<string>();
 
 		const result = 'Task resolved';
 		task.resolve(result);
@@ -16,7 +16,7 @@ describe('useTask', () => {
 	});
 
 	it('should reject the task', async () => {
-		const task = useTask<string>();
+		const task = new Task<string>();
 
 		const error = new Error('Task rejected');
 		task.reject(error);

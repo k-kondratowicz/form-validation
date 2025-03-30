@@ -44,7 +44,3 @@ export class Task<T = void> extends Promise<T> {
 		return 'Task';
 	}
 }
-
-export function useTask<T = void>() {
-	return new Task<T>();
-}
